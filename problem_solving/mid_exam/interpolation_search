@@ -1,0 +1,79 @@
+//보간 탐색으로 
+  
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <Windows.h> //나중에 지우기
+//#include <string.h>
+
+#define n1_max 15000000
+#define n2_max 150000000
+
+int n1[n1_max];
+int n2[n2_max];
+
+int input[3];
+int n1_num;
+int n2_num;
+
+int answer = 0; //최종 common
+
+// 두 배열의 공통 부분을 찾아 전역변수 answer에 저장하시오. 함수를 반환형을 바꾸어 return을 사용하셔도 됩니다.
+int first = 0, last = 0, mid = 0, now = 0, search = 0;
+void find_common() {
+    for (int i = 0; i < n1_num; i++) {
+        search = n1[now++];
+        last = n2_num - 1;
+        while (first <= last && search >= n2[first] && search <= n2[last]) {
+            mid = ((double)(search-n2[first]) / (n2[last]-n2[first]) * (last-first)) + first;
+            if (search == n2[mid]) {
+                answer++;
+                first = mid;
+                break;
+            }
+            else if (search < n2[mid])
+                last = mid - 1;
+            else
+                first = mid + 1;
+        }
+    }
+}
+
+int main(){ //main함수 수정 불가    
+    FILE* fp = fopen("sample1_answer.txt", "r");
+    FILE* fp2 = fopen("sample1_n2.txt", "r");
+    FILE* fp3 = fopen("sample1_n1.txt", "r");
+
+    for (int i = 0; i < 3; i++) {
+        fscanf(fp, "%d", &input[i]);
+    }
+
+    fclose(fp);
+
+    n2_num = input[0];
+    n1_num = input[1];
+    int common = input[2]; //정답!
+
+    for (int i = 0; i < n2_num; i++) {
+        fscanf(fp2, "%d", &n2[i]);
+    }
+
+    for (int i = 0; i < n1_num; i++) {
+        fscanf(fp3, "%d", &n1[i]);
+    }
+
+    fclose(fp2);
+    fclose(fp3);
+
+    LARGE_INTEGER freq, timeBegin, timeEnd;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&timeBegin);
+    find_common();
+    QueryPerformanceCounter(&timeEnd);
+    float timeElapsed = (timeEnd.QuadPart - timeBegin.QuadPart) / (float)freq.QuadPart;
+    printf("수행 시간은 %f입니다\n", timeElapsed);
+
+    printf("Real_Common : %d\n", common); //실제 정답 출력
+    printf("Calculated_Common : %d\n", answer); //찾은 정답 출력   
+    return 0;
+}
