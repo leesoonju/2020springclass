@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define true 1
+#define false 0
+
+int isReachable(int* gasStation, int N) {//N은 숫자 개수
+	/* Fill this Function */
+
+	int zeroarr[2500] = { 0 };
+	int z = 0; //0 개수
+	for (int i = 0; i < N; i++) {
+		if (gasStation[i] == 0)
+			zeroarr[z++] = i;
+	}
+
+	if (gasStation[0] == 0 && N > 1)
+		return false;
+
+	if (z == 0)
+		return true;
+
+
+
+	int val = 0;
+	for (int j = 0; j < z; j++) {
+		//printf("\nㅡㅡㅡㅡㅡ현재 %d번째 0이다ㅡㅡㅡㅡ\n",j+1);
+
+		for (int i = zeroarr[j] - 1; i >= 0; ) { // zeroarr에는 3, 4 들어있음 -> i는 현재 2
+			//printf("현재 i는 %d이다\n", i);
+
+			val = gasStation[i]; //index가 2면 gas는 2이다
+			if (i + val >= N - 1) {
+				//printf("최종 pass: i는 %d, val은 %d", i, val);
+				return true;
+			}
+			else if (gasStation[i + val] == 0) {
+				i--;
+				//printf("fail: i가 %d로 감소, val은 %d\n", i, val);
+				if (i < 0) {
+					//printf("index 0에서 fail이므로 최종 실패\n");
+					return false;
+				}
+			}
+			else if (gasStation[i + val] > 0) {
+
+				if (zeroarr[j] < i + val) { //현재 index < 찾은 index
+					//printf("pass: i는 %d, val은 %d", i, val);
+					break;
+				}
+				else if (zeroarr[j] >= i + val) { //현재 index > 찾은 index
+					//printf("최종 fail: 원래 idx는 %d. i는 %d, val은 %d, gas는 %d\n",zeroarr[j], i, val, gasStation[val]);
+					return false;
+				}
+
+			}
+		}
+
+
+	}
+}
+
+int main() {
+	char *input = NULL;
+	int in_tmp, N = 0;
+	size_t size;
+	char *ptr;
+	int gasStation[2500];
+	int result = true;
+
+	getline(&input, &size, stdin);
+
+	ptr = strtok(input, " ");
+	while (ptr != NULL) {
+		in_tmp = atoi(ptr);
+		gasStation[N++] = in_tmp;
+
+		ptr = strtok(NULL, " ");
+	}
+	
+	result = isReachable(gasStation, N);
+	printf("%s\n", (result ? "true" : "false"));
+
+	return 0;
+}
