@@ -1,0 +1,112 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <windows.h>
+
+#define QUE_LEN 1000
+int fail = 0;
+int sum = 0;
+
+typedef struct _cQueue {
+	int front;
+	int rear;
+	int queArr[QUE_LEN];
+} CQueue;
+typedef CQueue Queue;
+
+void Enqueue(Queue* pq, int data) {
+	/*
+	if (pq->front == pq->rear)
+		exit(-1);
+	*/
+	if (pq->rear == QUE_LEN - 1)
+		pq->rear = 0;
+	else
+		(pq->rear)++;
+	pq->queArr[pq->rear] = data;
+}
+
+int Dequeue(Queue* pq) {
+	/*
+	if (pq->front == pq->rear)
+		exit(-1);
+	*/
+	if (pq->front == QUE_LEN - 1)
+		pq->front = 0;
+	else
+		(pq->front)++;
+	return pq->queArr[pq->front];
+}
+
+
+LARGE_INTEGER Frequency;
+LARGE_INTEGER BeginTime;
+LARGE_INTEGER Endtime;
+
+#define	CUS_COME_TERM	80		// 고객의 주문 간격: 초 단위
+
+#define A		0		// 제품A 상수 
+#define B		1		// 제품B 상수
+#define C		2		// 제품C 상수
+
+#define A_TERM	80		// 제품A 제작 시간: 초 단위
+#define B_TERM	74		// 제품B 제작 시간: 초 단위
+#define C_TERM	89		// 제품C 제작 시간: 초 단위
+
+int main(void) {
+
+	QueryPerformanceFrequency(&Frequency);
+	QueryPerformanceCounter(&BeginTime);
+
+	int makeProc = 0; //제품을 만드는 데에 걸리는 시간을 나타내는 변수
+	int AOrder = 0, BOrder = 0, COrder = 0; //고객들이 제품 A, B, C를 총 몇 번 주문했는지 나타내는 변수
+	int sec; 
+
+	Queue que;
+	(&que)->front = 0;
+	(&que)->rear = 0;
+	srand(time(NULL));
+
+	// 아래 for문의 1회 회전은 1초의 시간 흐름을 의미함 (즉, 100000초동안 영업할 때의 대기행렬이다)
+	for (sec = 0; sec < 100000; sec++) {
+		if (sec % CUS_COME_TERM == 0) {
+			if (sum > QUE_LEN) //대기행렬이 꽉 찼는데 도착한 고객을 뜻함. 
+				fail++; //대기행렬이 100명 이하가 되기 전까지는 서비스를 받을 수 없으므로 제품을 주문하지 못하고 돌아간 고객임
+			switch (rand() % 3) {
+			case A:
+				Enqueue(&que, A_TERM); //고객이 제품 A를 주문함 -> 큐에 추가함(즉, 대기행렬에 추가됨)
+				AOrder += 1;
+				sum++;
+				break;
+			case B:
+				Enqueue(&que, B_TERM); //고객이 제품 B를 주문함 -> 큐에 추가함(즉, 대기행렬에 추가됨)
+				BOrder += 1;
+				sum++;
+				break;
+			case C:
+				Enqueue(&que, C_TERM); //고객이 제품 C를 주문함 -> 큐에 추가함(즉, 대기행렬에 추가됨)
+				COrder += 1;
+				sum++;
+				break;
+			}
+		}
+
+		if (makeProc == 0 && ((&que)->front != (&que)->rear)) {// makeProc == 0이라는 뜻은 제품을 다 만들었다는 뜻
+			makeProc = Dequeue(&que); //고객이 제품을 수령했기때문에 대기줄에서 나감
+			sum--;
+		}
+		makeProc--;
+	}
+	QueryPerformanceCounter(&Endtime);
+	__int64 elapsed = Endtime.QuadPart - BeginTime.QuadPart;
+	double duringtime = (double)elapsed / (double)Frequency.QuadPart;
+
+	printf("Simulation Report\n");
+	printf(" - product A: %d \n", AOrder);
+	printf(" - product B: %d \n", BOrder);
+	printf(" - product C: %d \n", COrder);
+	printf(" - Waiting Line size: %d\n", QUE_LEN);
+	printf("서비스 수준은 %f 퍼센트 입니다\n", ((double)(AOrder + BOrder + COrder) / (fail + AOrder + BOrder + COrder)) * 100);
+	printf("실행시간은 %f 입니다\n", duringtime);
+	return 0;
+}
