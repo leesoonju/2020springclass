@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+
+typedef struct stack {
+   double stackarray[100];
+   int top;
+} Stack;
+
+void push(Stack* stack, double data) {
+   stack->top += 1;
+   stack->stackarray[stack->top] = data;
+}
+
+double pop(Stack* stack) {
+   int r = stack->top;
+   if (stack->top == -1)
+      exit(-1);
+   stack->top -= 1;
+   return stack->stackarray[r];
+}
+
+int main() {
+   Stack stack;
+   (&stack)->top = -1;
+   char arr[100];
+   char* brr[100];
+   scanf("%[^\n]", arr);
+
+   char* ptr = strtok(arr, " ");     
+   int i;
+   for (i = 0; ptr != NULL; i++){
+      brr[i] = ptr;
+      ptr = strtok(NULL, " ");
+   }
+
+   char* tok;
+   double op1, op2;
+   i = i - 1;
+   for (i; i >= 0; i--) {
+      tok = brr[i];
+      if (strcmp(tok,"+")==0 || strcmp(tok,"-")==0 || strcmp(tok,"/")==0 || strcmp(tok,"*")==0){//연산자라면
+         op1 = pop(&stack);
+         op2 = pop(&stack);
+         switch (*tok) {
+         case '+':
+            push(&stack, op1 + op2);
+            break;
+         case '-':
+            push(&stack, op1 - op2);
+            break;
+         case '*':
+            push(&stack, op1 * op2);
+            break;
+         case '/':
+            push(&stack, op1 / op2);
+            break;
+         }
+      }
+      else //숫자라면
+         push(&stack, atof(tok));      
+   }
+   printf("%.2f", pop(&stack));
+}
