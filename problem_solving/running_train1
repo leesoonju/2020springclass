@@ -1,0 +1,66 @@
+//풀이 1
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <math.h>
+
+typedef struct stack {
+	double stackarray[1000];
+	int top;
+} Stack;
+
+void push(Stack* stack, double data) {
+	stack->top += 1;
+	stack->stackarray[stack->top] = data;
+}
+
+double pop(Stack* stack) {
+	int r = stack->top;
+	if (stack->top == -1)
+		exit(-1);
+	stack->top -= 1;
+	return stack->stackarray[r];
+}
+
+int main() {
+	Stack stack;
+	(&stack)->top = -1;
+	char arr[100];
+	char brr[100];
+	scanf("%[^\n]", arr);
+	int k = 0;
+	for (int i = 0; arr[i] != NULL; i++) {
+		if (arr[i] != ' ')
+			brr[k++] = arr[i];
+	}
+	//////공백제거//////
+	char tok;
+	double op1, op2, result;
+	int len = strlen(brr);
+	for (int i = len - 1; i >= 0; i--) {
+		tok = brr[i];
+		if (isdigit(tok))
+			push(&stack, tok - '0');
+		else {
+			op1 = pop(&stack);
+			op2 = pop(&stack);
+			switch (tok) {
+			case '+':
+				push(&stack, op1 + op2);
+				break;
+			case '-':
+				push(&stack, op1 - op2);
+				break;
+			case '*':
+				push(&stack, op1 * op2);
+				break;
+			case '/':
+				push(&stack, op1 / op2);
+				break;
+			}
+		}
+
+	}
+	printf("%.2f\n", pop(&stack));
+}
