@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int first_eliminated_mole(int* m, int m_num) {
+    if (m_num == 1)
+        return m[0];
+
+    int* arr;
+    arr = (int*)malloc(sizeof(int) * m_num);
+    for (int a = 0; a < m_num; a++)
+        arr[m[a]]++;
+
+    int maxidx = m_num - 1;
+    arr[m[0]]--;
+    if (arr[m[0]] == 0)
+        return m[0];
+
+    int jump = m[0];
+    m[0] = -1;
+    int cur = 1;
+    int cnt = 1;
+    int rmv = 0;
+    int idx = 0;
+
+    while (1) {
+        rmv = cur + jump;
+        cur = rmv + 1;
+        if (rmv > maxidx) {
+            for (int b = 0; b <= maxidx; b++) {
+                while (m[b] == -1 && b < maxidx)
+                    b++;
+                if (b == maxidx && m[b] == -1)
+                    break;
+                m[idx++] = m[b];
+            }
+            rmv = rmv - maxidx - 1;
+            maxidx -= cnt;
+            if (rmv == -1)
+                rmv = maxidx;
+            idx = 0, cnt = 0;
+            cur = rmv + 1;
+            if (cur > maxidx)
+                cur -= maxidx;
+        }
+
+        jump = m[rmv];
+        arr[m[rmv]]--;
+        if (arr[m[rmv]] == 0)
+            return m[rmv];
+
+        m[rmv] = -1;
+        cnt++;
+    }
+    free(arr);
+}
+
+int main() {
+    int* m;
+    int m_num = 0;
+    scanf_s("%d", &m_num);
+    m = (int*)malloc(sizeof(int) * m_num);
+    for (int i = 0; i < m_num; i++) 
+        scanf("%d", &m[i]);        
+    printf("%d\n", first_eliminated_mole(m, m_num));
+    free(m);
+    return 0;
+}
