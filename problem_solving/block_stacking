@@ -1,0 +1,122 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int block_length = 0; //레고 블록 문자열의 길이
+int wall_length = 0; //성벽 문자열의 길이
+
+char* block; // 레고 블록의 문자열
+char* wall; // 성벽의 문자열
+
+int answer_num = 0; //성벽을 구성하는 블럭의 최소 개수
+int answer_height = 0; //성벽이 가질 수 있는 최소 높이
+
+
+void calculator() {
+	int lidx = 0; //어디까지 넣을지 정하는 인덱스
+	int op = 0;
+	int a = 0;
+	int max_height = 0;
+	int min_height = 0;
+	int sidx[1000] = { 0 };
+	sidx[0] = block_length;
+	int b = 1;
+	int check = 0;
+
+	while (lidx < wall_length) {
+		if (op == 0) { //시작점이 q일때
+			while (wall[lidx] == block[a]) {
+				lidx++, a++;
+				if (a == block_length)
+					break;
+			}
+
+			(answer_num)++;
+			(answer_height)++;
+			if (max_height < answer_height)
+				max_height = answer_height;
+			a = 0;
+			if (wall[lidx] != block[0]) {
+				op = 1;
+			}
+			else {
+				sidx[b++] = lidx + block_length;
+			}
+			printf("op:%d lidx:%d 마지막 wall:%c height:%d num:%d\n", op, lidx, wall[lidx], answer_height, answer_num);
+		}
+		else if (op == 1) { //시작점이 q가 아닐때			
+			///////////// 층 계산
+			(answer_height--);
+			if (answer_height <= 0) {
+				check++;
+				printf("height:%d\n", answer_height);
+				if (min_height > answer_height)
+					min_height = answer_height;
+			}
+			else if (answer_height > 0) {
+				int c = 0;
+				for (; c < block_length; c++) {
+					if (wall[lidx] == block[c])
+						break;
+				}
+				int tb = b - 2;
+				int comp = sidx[b - 1] - sidx[tb];
+				while (c > comp) {
+					tb--;
+					comp = sidx[b - 1] - sidx[tb];
+					(answer_height)--;
+					if (answer_height <= 0) {
+						check++;
+						printf("height:%d\n", answer_height);
+						if (min_height > answer_height)
+							min_height = answer_height;
+						break;
+					}
+				}
+			}
+			//////////////
+			while (wall[lidx + 1] != block[0]) {
+				if (lidx == wall_length - 1)
+					break;
+				if (wall[lidx] == block[block_length - 1])
+					break;
+				lidx++;
+			}
+			(answer_num)++;
+			if (max_height < answer_height)
+				max_height = answer_height;
+
+			if (wall[lidx + 1] == block[0])
+				op = 0;
+
+			lidx++;
+			printf("op:%d lidx:%d 마지막 wall:%c height:%d num:%d\n", op, lidx, wall[lidx], answer_height, answer_num);
+		}
+	}
+	if (check == 0) {
+		answer_height = max_height;
+	}
+	else {
+		min_height--;
+		answer_height = max_height + (-1) * (min_height);
+	}
+}
+
+int main() {
+	scanf_s("%d", &block_length);
+	scanf_s("%d", &wall_length);
+
+	block = malloc(sizeof(char) * (block_length+1));
+	wall = malloc(sizeof(char) * (wall_length+1));
+
+	scanf_s("%s", block);
+	scanf_s("%s", wall);
+
+	calculator();
+	
+	printf("%d\n", answer_num);
+	printf("%d\n", answer_height);
+
+	return 0;
+
+	// block과 wall을 free시키는거 잊지 말자! 
+}
