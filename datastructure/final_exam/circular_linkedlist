@@ -1,0 +1,169 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <windows.h>
+
+int fail = 0;
+typedef struct _node{
+	int data;
+	struct _node* next;
+} Node;
+
+typedef struct _CLL{
+	Node* tail;
+	Node* cur;
+	Node* before;
+	int numOfData;
+} CList;
+typedef CList List;
+
+void ListInit(List* plist){
+	plist->tail = NULL;
+	plist->cur = NULL;
+	plist->before = NULL;
+	plist->numOfData = 0;
+}
+
+void LInsertFront(List* plist, int data){
+	Node* newNode = (Node*)malloc(sizeof(Node));
+	newNode->data = data;
+	if (plist->tail == NULL)	{
+		plist->tail = newNode;
+		newNode->next = newNode;
+	}
+	else{
+		newNode->next = plist->tail->next;
+		plist->tail->next = newNode;
+	}
+	(plist->numOfData)++;
+}
+
+void LInsert(List* plist, int data){
+	Node* newNode = (Node*)malloc(sizeof(Node));
+	newNode->data = data;
+
+	if (plist->tail == NULL)	{
+		plist->tail = newNode;
+		newNode->next = newNode;
+	}
+	else{
+		newNode->next = plist->tail->next;
+		plist->tail->next = newNode;
+		plist->tail = newNode;
+	}
+	(plist->numOfData)++;
+}
+
+int LFirst(List* plist, int* pdata){
+	if (plist->tail == NULL)    // 저장된 노드가 없다면
+		return FALSE;
+
+	plist->before = plist->tail;
+	plist->cur = plist->tail->next;
+
+	*pdata = plist->cur->data;
+	return TRUE;
+}
+
+int LNext(List* plist, int* pdata){
+	if (plist->tail == NULL)    // 저장된 노드가 없다면
+		return FALSE;
+
+	plist->before = plist->cur;
+	plist->cur = plist->cur->next;
+
+	*pdata = plist->cur->data;
+	return TRUE;
+}
+
+int LRemove(List* plist){
+	Node* rpos = plist->cur;
+	int rdata = rpos->data;
+
+	if (rpos == plist->tail){    // 삭제 대상을 tail이 가리킨다면
+		if (plist->tail == plist->tail->next)    // 그리고 마지막 남은 노드라면
+			plist->tail = NULL;
+		else
+			plist->tail = plist->before;
+	}
+	plist->before->next = plist->cur->next;
+	plist->cur = plist->before;
+
+	free(rpos);
+	(plist->numOfData)--;
+	return rdata;
+}
+
+
+LARGE_INTEGER Frequency;
+LARGE_INTEGER BeginTime;
+LARGE_INTEGER Endtime;
+
+#define	CUS_COME_TERM	80		// 고객의 주문 간격: 초 단위
+
+#define A		0		// 제품A 상수 
+#define B		1		// 제품B 상수
+#define C		2		// 제품C 상수
+
+#define A_TERM	80		// 제품A 제작 시간: 초 단위
+#define B_TERM	74		// 제품B 제작 시간: 초 단위
+#define C_TERM	89		// 제품C 제작 시간: 초 단위
+
+int main(void) {
+	QueryPerformanceFrequency(&Frequency);
+	QueryPerformanceCounter(&BeginTime);
+	int makeProc = 0;
+	int AOrder = 0, BOrder = 0, COrder = 0;
+	int sec;
+	int data, sum = 0;
+	int len = 0;
+
+	List list;
+
+	ListInit(&list);
+	srand(time(NULL));
+
+	// 아래 for문의 1회 회전은 1초의 시간 흐름을 의미함 (즉, 50000000초동안 영업할 때의 대기행렬이다)
+	for (sec = 0; sec < 100000; sec++) {
+		if (sec % CUS_COME_TERM == 0) {
+			sum++;
+			if (sum > 1000) //대기행렬이 꽉 차서 이후부터 도착하는 고객은 대기행렬이 100명 이하가 되기 전까지는 서비스를 받을 수 없음
+				fail++;
+			switch (rand() % 3) {
+			case A:
+				LInsert(&list, A_TERM);//고객이 제품 A를 주문함
+				AOrder += 1;
+				break;
+			case B:
+				LInsert(&list, B_TERM);//고객이 제품 B를 주문함
+				BOrder += 1;
+				break;
+			case C:
+				LInsert(&list, C_TERM);//고객이 제품 C를 주문함
+				COrder += 1;
+				break;
+			}
+		}
+		len = (&list)->numOfData;
+
+		if (makeProc == 0 && !len) { // makeProc == 0이라는 뜻은 제품을 다 만들었다는 뜻
+			LFirst(&list, &data);
+			makeProc = LRemove(&list);//고객이 제품을 수령했기때문에 대기줄에서 나감
+			sum--;
+		}
+		makeProc--;//제품 만드는 중
+	}
+
+	QueryPerformanceCounter(&Endtime);
+	__int64 elapsed = Endtime.QuadPart - BeginTime.QuadPart;
+	double duringtime = (double)elapsed / (double)Frequency.QuadPart;
+
+	printf("Simulation Report\n");
+	printf(" - product A: %d \n", AOrder);
+	printf(" - product B: %d \n", BOrder);
+	printf(" - product C: %d \n", COrder);
+	printf(" - Waiting Line size: %d\n", 100);
+	printf("서비스 수준은 %f 퍼센트 입니다\n", ((double)(AOrder + BOrder + COrder) / (fail + AOrder + BOrder + COrder)) * 100);
+	printf("실행시간은 %f 입니다\n", duringtime);
+	return 0;
+}
