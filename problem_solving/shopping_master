@@ -1,0 +1,55 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int numShoppingBag(int* people, int peopleSize, int limit) { //weights, num, limit
+	int ans;
+	ans = 0;
+
+	int i, j;
+	int sdata;
+	for (i = 1; i < peopleSize; i++) {
+		sdata = people[i];
+		for (j = i - 1; j >= 0; j--) {
+			if (people[j] < sdata)
+				people[j + 1] = people[j];
+			else
+				break;
+		}
+		people[j + 1] = sdata;
+	}
+
+
+	for (i = 0; i < peopleSize; i++) {
+		if (people[i] == limit)
+			ans++;
+		if (people[i] > limit)
+			return -1;
+	}
+
+	int front = ans;
+	int back = peopleSize - 1;
+
+	while (front <= back) { 
+		if (people[front] + people[back] <= limit)
+			ans++, front++, back--;
+		else if (people[front] + people[back] > limit)
+			ans++, front++;
+	}
+	return ans;
+}
+
+int main() {
+	int num;
+	int limit;
+	scanf_s("%d", &limit);
+	scanf_s("%d", &num);
+	int* weights = (int*)malloc(sizeof(int) * num);
+
+	for (int i = 0; i < num; i++) {
+		scanf_s("%d", &weights[i]);
+	}
+	printf("%d", numShoppingBag(weights, num, limit));
+
+	free(weights);
+	return 0;
+}
