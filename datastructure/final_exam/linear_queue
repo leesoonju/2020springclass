@@ -1,0 +1,115 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <windows.h>
+
+#define QUE_LEN	1000
+int fail = 0;
+int sum = 0;
+
+typedef struct _cQueue {
+	int front;
+	int rear;
+	int queArr[QUE_LEN];
+} CQueue;
+typedef CQueue Queue;
+
+void Enqueue(Queue* pq, int data) {
+	/*
+	if (pq->front == pq->rear)
+		exit(-1);
+	*/
+	if (pq->rear == QUE_LEN - 1 && pq->front >= 0) {//선형큐가 배열의 끝에 도달했거나 꽉찬 경우이므로 큐의 앞 공간으로 데이터 옮겨오기
+		int a = pq->rear - pq->front + 1;
+		int i = pq->front;
+		int j = 0;
+		for (; j < a;) 
+			pq->queArr[j++] = pq->queArr[i++];	
+		pq->front = 0, pq->rear = j - 1;
+	}
+	else 
+		(pq->rear)++;
+	pq->queArr[pq->rear] = data;
+}
+
+int Dequeue(Queue* pq) {
+	/*
+	if (pq->front == pq->rear)
+		exit(-1);
+	*/
+	(pq->front)++;
+	return pq->queArr[pq->front];
+}
+
+
+LARGE_INTEGER Frequency;
+LARGE_INTEGER BeginTime;
+LARGE_INTEGER Endtime;
+
+#define	CUS_COME_TERM	80		// 고객의 주문 간격: 초 단위
+
+#define A		0		// 제품A 상수 
+#define B		1		// 제품B 상수
+#define C		2		// 제품C 상수
+
+#define A_TERM	80		// 제품A 제작 시간: 초 단위
+#define B_TERM	74		// 제품B 제작 시간: 초 단위
+#define C_TERM	89   	// 제품C 제작 시간: 초 단위
+
+int main(void) {
+
+	QueryPerformanceFrequency(&Frequency);
+	QueryPerformanceCounter(&BeginTime);
+
+	int makeProc = 0;
+	int AOrder = 0, BOrder = 0, COrder = 0;
+	int sec;
+
+	Queue que;
+	(&que)->front = 0;
+	(&que)->rear = 0;
+	srand(time(NULL));
+
+	// 아래 for문의 1회 회전은 1초의 시간 흐름을 의미함 (즉, 50000000초동안 영업할 때의 대기행렬이다)
+	for (sec = 0; sec < 100000; sec++) {
+		if (sec % CUS_COME_TERM == 0) {
+			if (sum > QUE_LEN) //대기행렬이 꽉 차서 이후부터 도착하는 고객은 대기행렬이 100명 이하가 되기 전까지는 서비스를 받을 수 없음
+				fail++;
+			switch (rand() % 3) {
+			case A:
+				Enqueue(&que, A_TERM); //고객이 제품 A를 주문함
+				AOrder += 1;
+				sum++;
+				break;
+			case B:
+				Enqueue(&que, B_TERM); //고객이 제품 B를 주문함
+				BOrder += 1;
+				sum++;
+				break;
+			case C:
+				Enqueue(&que, C_TERM); //고객이 제품 C를 주문함
+				COrder += 1;
+				sum++;
+				break;
+			}
+		}
+
+		if (makeProc == 0 && ((&que)->front != (&que)->rear)) {
+			makeProc = Dequeue(&que); //고객이 제품을 수령했기때문에 대기줄에서 나감
+			sum--;
+		}
+		makeProc--;
+	}
+	QueryPerformanceCounter(&Endtime);
+	__int64 elapsed = Endtime.QuadPart - BeginTime.QuadPart;
+	double duringtime = (double)elapsed / (double)Frequency.QuadPart;
+
+	printf("Simulation Report\n");
+	printf(" - product A: %d \n", AOrder);
+	printf(" - product B: %d \n", BOrder);
+	printf(" - product C: %d \n", COrder);
+	printf(" - Waiting Line size: %d\n", QUE_LEN);
+	printf("서비스 수준은 %f 퍼센트 입니다\n", ((double)(AOrder + BOrder + COrder)/(fail + AOrder + BOrder + COrder)) * 100);
+	printf("실행시간은 %f 입니다\n", duringtime);
+	return 0;
+}
